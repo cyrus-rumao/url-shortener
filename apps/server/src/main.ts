@@ -1,3 +1,4 @@
+import cookieParser from 'cookie-parser';
 import express from 'express';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from './generated/prisma/client.js';
@@ -5,12 +6,21 @@ const connectionString = `${process.env.DATABASE_URL}`;
 const adapter = new PrismaPg({ connectionString });
 const prisma = new PrismaClient({ adapter });
 
-import argon2 from 'argon2';
+import { authRouter } from './modules/auth/auth.routes';
+import { ENV } from './shared/config/env';
+import { errorMiddleware } from './shared/middleware/error.middleware';
 
 const app = express();
+
 app.use(express.json());
-app.get('/api', (req, res) => {
-  res.json({ message: 'Welcome to server you haha' });
+app.use(cookieParser());
+
+app.get('/api', (_req, res) => {
+  res.json({
+    success: true,
+    message: 'URL shortener server is running.',
+    data: {},
+  });
 });
 app.get('/api/users', async (req, res) => {
   const users = await prisma.user.findMany();
@@ -46,8 +56,11 @@ app.post('/api/users', async (req, res) => {
   return;
 });
 
-const port = process.env.PORT || 3333;
-const server = app.listen(port, () => {
-  console.log(`Listening at http://localhost:${port}/api`);
+app.use('/api/auth', authRouter);
+app.use(errorMiddleware);
+
+const server = app.listen(ENV.PORT, () => {
+  console.log(`Listening at http://localhost:${ENV.PORT}/api`);
 });
+
 server.on('error', console.error);
