@@ -1,1 +1,0 @@
-Refer to [AGENTS.md](../AGENTS.md) for more information about the project and repository instructions
