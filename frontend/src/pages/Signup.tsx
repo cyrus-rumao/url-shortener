@@ -2,9 +2,10 @@ import { useEffect, useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/use-auth";
 
-const Login = () => {
+const Signup = () => {
   const navigate = useNavigate();
-  const { user, loading, login } = useAuth();
+  const { user, loading, signup } = useAuth();
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -22,10 +23,10 @@ const Login = () => {
     setError("");
 
     try {
-      await login({ email, password });
-      navigate("/");
+      await signup({ name, email, password });
+      navigate("/login");
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Login failed");
+      setError(error instanceof Error ? error.message : "Signup failed");
     } finally {
       setSubmitting(false);
     }
@@ -35,24 +36,35 @@ const Login = () => {
     <section className="mx-auto grid w-full max-w-6xl gap-10 px-4 py-14 lg:grid-cols-[0.95fr_1.05fr] lg:items-center lg:py-20">
       <div className="space-y-5">
         <span className="inline-flex rounded-full border border-blue-200 bg-blue-50 px-4 py-1 text-sm font-medium text-blue-700">
-          Welcome back
+          Create an account
         </span>
         <h1 className="text-4xl font-semibold tracking-tight text-slate-900 md:text-5xl">
-          Log in to manage your links.
+          Get started with your own short links.
         </h1>
         <p className="max-w-xl text-lg leading-8 text-slate-600">
-          Access your short URLs, create new ones, and keep your account in one
-          place.
+          Sign up once and manage all your shortened URLs from a single
+          dashboard.
         </p>
       </div>
 
       <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-[0_24px_80px_-30px_rgba(37,99,235,0.35)]">
-        <h2 className="text-2xl font-semibold text-slate-900">Login</h2>
+        <h2 className="text-2xl font-semibold text-slate-900">Signup</h2>
         <p className="mt-1 text-sm text-slate-500">
-          Use your registered email and password.
+          Create your account in a few seconds.
         </p>
 
         <form className="mt-6 grid gap-4" onSubmit={handleSubmit}>
+          <label className="grid gap-2">
+            <span className="text-sm font-medium text-slate-700">Name</span>
+            <input
+              className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100"
+              placeholder="Your name"
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              required
+            />
+          </label>
+
           <label className="grid gap-2">
             <span className="text-sm font-medium text-slate-700">Email</span>
             <input
@@ -82,7 +94,7 @@ const Login = () => {
             disabled={submitting}
             className="rounded-2xl bg-blue-600 px-4 py-3 font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-70"
           >
-            {submitting ? "Logging in..." : "Login"}
+            {submitting ? "Creating account..." : "Signup"}
           </button>
         </form>
 
@@ -93,9 +105,9 @@ const Login = () => {
         ) : null}
 
         <p className="mt-5 text-sm text-slate-500">
-          Need an account?{" "}
-          <Link className="font-medium text-blue-600 hover:text-blue-700" to="/signup">
-            Signup
+          Already have an account?{" "}
+          <Link className="font-medium text-blue-600 hover:text-blue-700" to="/login">
+            Login
           </Link>
         </p>
       </div>
@@ -103,4 +115,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default Signup;
