@@ -1,23 +1,15 @@
 // import type { Request, Response } from "express";
 import { createUser, findByEmail } from "@/repositories/user.repository.js";
-import { signupSchema, type LoginInput, type SignupInput } from "@/validations/auth.schema.js";
+import type { LoginInput, SignupInput } from "@/validations/auth.schema.js";
 import { encryptPassword, verifyPassword } from "@/auth/password.js";
 import { clearRefreshToken, generateAccessToken, generateRefreshToken, storeRefreshToken } from "@/auth/jwt.js";
-// import { generateAccessToken } from "@/auth/jwt.js";
 export const signupService = async (signupBody: SignupInput) => {
-    try {
-        // const signupBody = signupSchema.parse(req.body);
-        const existingUser = await findByEmail(signupBody.email);
-        if (existingUser) {
-            throw new Error("User already exists");
-        }
-        const hashedPassword = await encryptPassword(signupBody.password);
-        const user = await createUser(signupBody.name, signupBody.email, hashedPassword);
-        return user;
-    } catch (error) {
-        console.log("Error here 2", error);
-        throw new Error("Error creating user");
+    const existingUser = await findByEmail(signupBody.email);
+    if (existingUser) {
+        throw new Error("User already exists");
     }
+    const hashedPassword = await encryptPassword(signupBody.password);
+    return createUser(signupBody.name, signupBody.email, hashedPassword);
 };
 
 export const loginService = async (loginBody: LoginInput) => {
@@ -25,7 +17,7 @@ export const loginService = async (loginBody: LoginInput) => {
     if (!existingUser) {
         throw new Error("User does not exist");
     }
-    if (!verifyPassword(existingUser.password, loginBody.password)) {
+    if (!(await verifyPassword(existingUser.password, loginBody.password))) {
         throw new Error("Invalid password");
     }
     const accessToken = generateAccessToken(existingUser.id);

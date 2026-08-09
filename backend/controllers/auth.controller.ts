@@ -1,7 +1,6 @@
 import type { Request, Response } from "express";
-import { signupSchema, loginSchema, type SignupInput, type LoginInput } from "@/validations/auth.schema.js";
+import { signupSchema, loginSchema } from "@/validations/auth.schema.js";
 import { loginService, logoutService, signupService } from "@/services/auth.service.js";
-// import { findByEmail } from "@/repositories/user.repository.js";
 import { setAccessCookie, setRefreshCookie, clearAuthCookies } from "@/auth/cookies.js";
 export const signup = async (
   req: Request, res: Response
@@ -15,17 +14,18 @@ export const signup = async (
         id: user.id,
         name: user.name,
         email: user.email,
-        // password: user.password,
       },
     });
   }
   catch (error) {
-    console.log("Error here 1")
     if (error instanceof Error) {
       return res.status(400).json({
         message: error.message,
       });
     }
+    return res.status(500).json({
+      message: "Failed to create user",
+    });
   }
 };
 
@@ -47,14 +47,20 @@ export const login = async (
       }
     });
   } catch (error) {
-    console.log("Error here 3", error)
+    if (error instanceof Error) {
+      return res.status(400).json({
+        message: error.message,
+      });
+    }
+    return res.status(500).json({
+      message: "Login failed",
+    });
   }
 };
 export const logout = async (
   req: Request, res: Response
 ) => {
   try {
-    console.log("Logout request body:", req.user);
     const userId = req.user.id;
     await logoutService(userId);
     clearAuthCookies(res);
@@ -63,6 +69,20 @@ export const logout = async (
     });
   }
   catch (error) {
-    console.log("Error here 4", error)
+    if (error instanceof Error) {
+      return res.status(400).json({
+        message: error.message,
+      });
+    }
+    return res.status(500).json({
+      message: "Logout failed",
+    });
   }
+};
+
+export const me = async (req: Request, res: Response) => {
+  return res.status(200).json({
+    message: "Authenticated user",
+    user: req.user,
+  });
 };

@@ -30,10 +30,9 @@ export const authenticate = async (
         }
         req.user = {
             id: user.id,
-            // name: user.name,
-            // email: user.email,
+            name: user.name,
+            email: user.email,
         };
-        console.log("Callign Next")
         next();
     } catch (error) {
         if (error instanceof jwt.TokenExpiredError) {
