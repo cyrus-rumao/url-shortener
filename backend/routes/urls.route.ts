@@ -8,8 +8,8 @@ import {
 } from "@/controllers/urls.controller.js";
 
 const router = express.Router();
-
-router.post("/", authenticate, createShortUrl);
+// console.log("Router hit")
+router.post("/", createShortUrl);
 router.get("/mine", authenticate, getMyShortUrls);
 router.delete("/:id", authenticate, deleteShortUrl);
 router.get("/:slug", redirectShortUrl);

@@ -12,13 +12,15 @@ const getRequestOrigin = (req: Request) => `${req.protocol}://${req.get("host")}
 
 export const createShortUrl = async (req: Request, res: Response) => {
   try {
+    console.log("Route hit");
+
     const input = createShortUrlSchema.parse(req.body);
     const createdUrl = await createShortUrlService(
       input,
-      req.user.id,
+      req.user ? req.user.id : null,
       getRequestOrigin(req),
     );
-
+    console.log("Created URL: ",createdUrl);
     return res.status(201).json({
       success: true,
       message: "Short URL created successfully",
@@ -52,7 +54,7 @@ export const createShortUrl = async (req: Request, res: Response) => {
 export const redirectShortUrl = async (req: Request, res: Response) => {
   try {
     const slugParam = req.params.slug;
-
+    console.log("Slug parameter: ", slugParam);
     if (typeof slugParam !== "string" || !slugParam.trim()) {
       return res.status(400).json({
         success: false,
