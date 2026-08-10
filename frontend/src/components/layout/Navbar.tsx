@@ -1,5 +1,5 @@
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import { useAuth } from "../../hooks/use-auth";
+import { useAuth } from "@/hooks/use-auth.js";
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -23,7 +23,31 @@ const Navbar = () => {
           </div>
         </Link>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
+          <nav className="hidden items-center gap-2 md:flex">
+            <NavLink
+              to="/"
+              className={({ isActive }) =>
+                `rounded-full px-4 py-2 text-sm font-medium transition ${
+                  isActive
+                    ? "bg-blue-50 text-blue-700"
+                    : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                }`
+              }
+            >
+              Shorten
+            </NavLink>
+          </nav>
+
+          <div className="md:hidden">
+            <NavLink
+              to="/dashboard"
+              className="rounded-full px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"
+            >
+              Dashboard
+            </NavLink>
+          </div>
+
           {loading ? (
             <div className="h-9 w-32 animate-pulse rounded-full bg-slate-200" />
           ) : user ? (

@@ -149,18 +149,18 @@ Sonner is the standard for all toast/notification UI (success confirmations, err
 
 The client uses a clean, modern **white background with blue as the primary accent** — light, high-contrast, and minimal. Define these as Tailwind theme tokens rather than hardcoding hex values in components.
 
-| Token | Hex | Usage |
-|---|---|---|
-| `surface` | `#FFFFFF` | Page/app background |
-| `surface-alt` | `#F5F7FA` | Secondary panels/cards, subtle section separation |
-| `border-subtle` | `#E2E8F0` | Card borders, dividers |
-| `primary` | `#2563EB` | Primary accent — buttons, active nav links, focus states |
-| `primary-hover` | `#1D4ED8` | Hover/pressed state for primary accent |
-| `primary-soft` | `#EFF6FF` | Light blue backgrounds (badges, selected states, hover fills) |
-| `text-primary` | `#0F172A` | Primary body text |
-| `text-secondary` | `#64748B` | Secondary/muted text |
-| `error` | `#DC2626` | Errors only |
-| `success` | `#16A34A` | Success states only |
+| Token            | Hex       | Usage                                                         |
+| ---------------- | --------- | ------------------------------------------------------------- |
+| `surface`        | `#FFFFFF` | Page/app background                                           |
+| `surface-alt`    | `#F5F7FA` | Secondary panels/cards, subtle section separation             |
+| `border-subtle`  | `#E2E8F0` | Card borders, dividers                                        |
+| `primary`        | `#2563EB` | Primary accent — buttons, active nav links, focus states      |
+| `primary-hover`  | `#1D4ED8` | Hover/pressed state for primary accent                        |
+| `primary-soft`   | `#EFF6FF` | Light blue backgrounds (badges, selected states, hover fills) |
+| `text-primary`   | `#0F172A` | Primary body text                                             |
+| `text-secondary` | `#64748B` | Secondary/muted text                                          |
+| `error`          | `#DC2626` | Errors only                                                   |
+| `success`        | `#16A34A` | Success states only                                           |
 
 Guidelines:
 

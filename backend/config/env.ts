@@ -21,13 +21,15 @@ const envSchema = z.object({
   ACCESS_TOKEN_EXPIRY: z.string().default("15m"),
 
   REFRESH_TOKEN_EXPIRY: z.string().default("7d"),
+  AUTO_SLUG_LENGTH: z.coerce.number().default(8),
+  AUTO_SLUG_MAX_RETRIES: z.coerce.number().default(5),
 });
 
 const parsed = envSchema.safeParse(process.env);
 
 if (!parsed.success) {
   console.error(
-    "❌ Invalid environment variables:\n",
+    "Invalid environment variables:\n",
     parsed.error.flatten().fieldErrors,
   );
 
