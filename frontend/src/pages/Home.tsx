@@ -22,6 +22,7 @@ const Home = () => {
       });
       navigate("/shortened", { state: { result: createdShortUrl } });
     } catch (serviceError) {
+      console.log("Error creating short URL:", serviceError);
       setError(
         serviceError instanceof Error ? serviceError.message : "Failed to shorten URL",
       );

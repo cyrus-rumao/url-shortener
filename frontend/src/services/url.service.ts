@@ -1,7 +1,6 @@
 import { getErrorMessage } from "@/utils/error";
 import { api } from "@/services/axios";
 import type {
-  
   ApiResponse,
   CreateShortUrlData,
   CreateShortUrlPayload,
@@ -14,7 +13,6 @@ export const createShortUrl = async (payload: CreateShortUrlPayload) => {
       "/urls",
       payload,
     );
-
     if (!response.data.success) {
       throw new Error(response.data.message);
     }

@@ -41,31 +41,52 @@ const generateAutoSlug = () => {
   }).join("");
 };
 
-const normalizeSlug = (slug: string) => slug.trim().toLowerCase();
+const normalizeSlug = (slug: string) => slug.trim();
 
 const buildShortUrl = (origin: string, slug: string) => `${origin}/${slug}`;
 
 export const createShortUrlService = async (
   input: CreateShortUrlInput,
-  userId: string,
+  userId: string | null,
   origin: string,
 ): Promise<ShortUrlResponse> => {
   let slugToUse: string | null = input.slug ? normalizeSlug(input.slug) : null;
+  const isAuthenticated = Boolean(userId);
 
   if (slugToUse) {
+    // Check both DB and Redis cache for collisions.
+    
     const existingSlug = await findUrlBySlug(slugToUse);
 
-    if (existingSlug) {
-      throw new UrlServiceError("Custom slug is already in use", 409, [
-        "SLUG_CONFLICT",
-      ]);
+    try {
+      const cached = await getCachedOriginalUrlBySlug(slugToUse);
+      if (existingSlug || cached) {
+        throw new UrlServiceError("Custom slug is already in use", 409, [
+          "SLUG_CONFLICT",
+        ]);
+      }
+    } catch (err) {
+      // If Redis failed, still respect DB check above. If DB empty but Redis errored,
+      // proceed cautiously and only rely on DB result. Log error but don't fail the request.
+      if (existingSlug) {
+        throw new UrlServiceError("Custom slug is already in use", 409, [
+          "SLUG_CONFLICT",
+        ]);
+      }
     }
   } else {
     for (let attempt = 0; attempt < AUTO_SLUG_MAX_RETRIES; attempt += 1) {
       const generatedSlug = generateAutoSlug();
       const existingSlug = await findUrlBySlug(generatedSlug);
 
-      if (!existingSlug) {
+      let cached = null;
+      try {
+        cached = await getCachedOriginalUrlBySlug(generatedSlug);
+      } catch (err) {
+        console.error("Redis read failed during slug generation check", err);
+      }
+
+      if (!existingSlug && !cached) {
         slugToUse = generatedSlug;
         break;
       }
@@ -80,11 +101,38 @@ export const createShortUrlService = async (
     }
   }
 
+  // If unauthenticated: persist only to Redis with 24h TTL and do NOT write to DB.
+  if (!isAuthenticated) {
+    try {
+      // 24 hours in seconds
+      const TWENTY_FOUR_HOURS = 24 * 60 * 60;
+      await setCachedOriginalUrlBySlug(slugToUse as string, input.url, TWENTY_FOUR_HOURS);
+    } catch (error) {
+      console.error("Redis write failed for unauthenticated short URL", error);
+      throw new UrlServiceError("Temporary URL creation failed", 503, ["REDIS_FAILURE"]);
+    }
+
+    return {
+      id: "",
+      slug: slugToUse as string,
+      originalUrl: input.url,
+      shortUrl: buildShortUrl(origin, slugToUse as string),
+    };
+  }
+
+  // Authenticated flow: persist to PostgreSQL (source of truth) and warm cache.
   const createdUrl = await createUrl({
-    slug: slugToUse,
+    slug: slugToUse as string,
     url: input.url,
-    userId,
+    userId: userId as string,
   });
+
+  try {
+    // Populate cache with default TTL for faster redirects.
+    await setCachedOriginalUrlBySlug(createdUrl.slug, createdUrl.url);
+  } catch (error) {
+    console.error("Redis cache write failed for slug redirect", error);
+  }
 
   return {
     id: createdUrl.id,
@@ -121,11 +169,12 @@ export const resolveOriginalUrlBySlugService = async (
   slug: string,
 ): Promise<string> => {
   const normalizedSlug = normalizeSlug(slug);
-
+console.log("Normalized slug: ", normalizedSlug);
   try {
     // Cache-aside read path for high-throughput redirects:
     // Redis hit returns immediately without touching PostgreSQL.
     const cachedUrl = await getCachedOriginalUrlBySlug(normalizedSlug);
+    console.log("URL is cached. Here it is: ", cachedUrl);
     if (cachedUrl) {
       return cachedUrl;
     }
