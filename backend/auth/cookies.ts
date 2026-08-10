@@ -22,5 +22,5 @@ export function setRefreshCookie(res: Response, token: string) {
 export function clearAuthCookies(res: Response) {
   res.clearCookie("accessToken");
   res.clearCookie("refreshToken");
-  console.log("Auth cookies cleared");
+  // console.log("Auth cookies cleared");
 }

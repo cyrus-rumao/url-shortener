@@ -38,7 +38,7 @@ export const storeRefreshToken = async (userId: string, refreshToken: string) =>
 export const clearRefreshToken = async (userId: string) => {
   try {
     await redis.del(`refresh_token:${userId}`);
-    console.log(`Refresh token for user ${userId} cleared from Redis`);
+    // console.log(`Refresh token for user ${userId} cleared from Redis`);
   } catch (err) {
     console.log('Redis error:', err);
   }

@@ -1,5 +1,5 @@
 import { createContext } from "react";
-import type { LoginPayload, SignupPayload, User } from "../types/auth";
+import type { LoginPayload, SignupPayload, User } from "@/types/auth.js";
 
 export interface AuthContextValue {
   user: User | null;

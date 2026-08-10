@@ -1,6 +1,6 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useState, type SyntheticEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../hooks/use-auth";
+import { useAuth } from "@/hooks/use-auth.js";
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -17,7 +17,7 @@ const Signup = () => {
     }
   }, [loading, navigate, user]);
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: SyntheticEvent<HTMLFormElement>) => {
     event.preventDefault();
     setSubmitting(true);
     setError("");
@@ -106,7 +106,10 @@ const Signup = () => {
 
         <p className="mt-5 text-sm text-slate-500">
           Already have an account?{" "}
-          <Link className="font-medium text-blue-600 hover:text-blue-700" to="/login">
+          <Link
+            className="font-medium text-blue-600 hover:text-blue-700"
+            to="/login"
+          >
             Login
           </Link>
         </p>

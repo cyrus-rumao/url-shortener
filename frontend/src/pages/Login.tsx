@@ -1,6 +1,6 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useState, type SyntheticEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../hooks/use-auth";
+import { useAuth } from "@/hooks/use-auth.js";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -16,7 +16,7 @@ const Login = () => {
     }
   }, [loading, navigate, user]);
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: SyntheticEvent<HTMLFormElement>) => {
     event.preventDefault();
     setSubmitting(true);
     setError("");

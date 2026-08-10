@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
-import { api } from "../services/axios";
-import { AuthContext } from "./auth-context";
-import type { LoginPayload, SignupPayload, User } from "../types/auth";
+import { api } from "@/services/axios.js";
+import { AuthContext } from "./auth-context.js";
+import type { LoginPayload, SignupPayload, User } from "@/types/auth.js";
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
