@@ -12,6 +12,6 @@ const router = express.Router();
 router.post("/", createShortUrl);
 router.get("/mine", authenticate, getMyShortUrls);
 router.delete("/:id", authenticate, deleteShortUrl);
-router.get("/:slug", redirectShortUrl);
+router.get("/:slug",    redirectShortUrl);
 
 export default router;

@@ -1,0 +1,29 @@
+services:
+  backend:
+    image: cyrumao117/url-backend:latest
+    container_name: url-backend-container
+    restart: unless-stopped
+    env_file:
+      - .env.production.local
+    ports:
+      - "2000:2000"
+    expose:
+      - "2000"
+
+  frontend:
+    image: cyrumao117/url-frontend:latest
+    container_name: url-frontend-container
+    restart: unless-stopped
+  nginx:
+    image: nginx:alpine
+    container_name: url-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - backend
+      - frontend
+volumes:
+  pgdata:
