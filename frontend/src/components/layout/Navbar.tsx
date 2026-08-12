@@ -39,7 +39,7 @@ const Navbar = () => {
             </NavLink>
           </nav>
 
-          <div className="md:hidden">
+          <div className="">
             <NavLink
               to="/dashboard"
               className="rounded-full px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"
