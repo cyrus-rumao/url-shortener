@@ -2,6 +2,7 @@ import { randomBytes } from "crypto";
 import {
   createUrl,
   deleteUrlByIdAndUserId,
+  findSlugById,
   findUrlBySlug,
   findUrlsByUserId,
 } from "@/repositories/url.repository.js";
@@ -45,13 +46,76 @@ const normalizeSlug = (slug: string) => slug.trim();
 
 const buildShortUrl = (origin: string, slug: string) => `${origin}/${slug}`;
 
+
 export const createShortUrlService = async (
   input: CreateShortUrlInput,
   userId: string | null,
   origin: string,
 ): Promise<ShortUrlResponse> => {
-  let slugToUse: string | null = input.slug ? normalizeSlug(input.slug) : null;
   const isAuthenticated = Boolean(userId);
+
+  // Helper: normalize origin host for same-domain checks
+  let originHost: string;
+  try {
+    originHost = new URL(origin).host.toLowerCase();
+  } catch (err) {
+    originHost = origin.toLowerCase();
+  }
+
+  // If the user provided one of our own short URLs as the input (e.g. https://our.domain/abc or www.our/abc),
+  // detect that and return the existing short URL instead of creating a new one.
+  try {
+    let possible = input.url;
+    if (!/^https?:\/\//i.test(possible)) {
+      // allow inputs like "www.short/abc" by assuming https
+      possible = `https://${possible}`;
+    }
+
+    const parsed = new URL(possible);
+    if (parsed.host.toLowerCase() === originHost) {
+      const pathSegments = parsed.pathname.split("/").filter(Boolean);
+      const candidateSlug = pathSegments.length > 0 ? pathSegments[0] : null;
+      if (candidateSlug) {
+        // Check DB first (source of truth)
+        const existingUrl = await findUrlBySlug(candidateSlug);
+        if (existingUrl) {
+          return {
+            id: existingUrl.id,
+            slug: existingUrl.slug,
+            originalUrl: existingUrl.url,
+            shortUrl: buildShortUrl(origin, existingUrl.slug),
+            alreadyExisted: true,
+            message: "Input is already a short URL; returning the existing short URL.",
+          };
+        }
+
+        // For unauthenticated users, check Redis cache for transient short URLs
+        try {
+          const cached = await getCachedOriginalUrlBySlug(candidateSlug);
+          if (cached) {
+            return {
+              id: "",
+              slug: candidateSlug,
+              originalUrl: cached,
+              shortUrl: buildShortUrl(origin, candidateSlug),
+              alreadyExisted: true,
+              message: "Input is already a short URL (transient); returning the existing short URL.",
+            };
+          }
+        } catch (err) {
+          // Redis read failure should not block creating a new short URL; proceed.
+          console.error("Redis read failed while checking existing short url", err);
+        }
+      }
+    }
+  } catch (err) {
+    // If parsing fails, continue with normal creation flow.
+  }
+
+  // At this point, input.url is not an existing short URL in our domain (or parsing failed).
+  // Proceed to normal slug selection/generation logic.
+  let slugToUse: string | null = input.slug ? normalizeSlug(input.slug) : null;
+
   if (slugToUse) {
     const existingSlug = await findUrlBySlug(slugToUse);
 
@@ -63,8 +127,6 @@ export const createShortUrlService = async (
         ]);
       }
     } catch (err) {
-      // If Redis failed, still respect DB check above. If DB empty but Redis errored,
-      // proceed cautiously and only rely on DB result. Log error but don't fail the request.
       if (existingSlug) {
         throw new UrlServiceError("Custom slug is already in use", 409, [
           "SLUG_CONFLICT",
@@ -100,7 +162,6 @@ export const createShortUrlService = async (
 
   // If unauthenticated: persist only to Redis with 24h TTL and do NOT write to DB.
   if (!isAuthenticated) {
-    console.log("reading unauthenticated!")
     try {
       // 24 hours in seconds
       const TWENTY_FOUR_HOURS = 24 * 60 * 60;
@@ -115,22 +176,20 @@ export const createShortUrlService = async (
       slug: slugToUse as string,
       originalUrl: input.url,
       shortUrl: buildShortUrl(origin, slugToUse as string),
+      message: "Temporary short URL created",
     };
   }
-  // Authenticated flow: persist to PostgreSQL (source of truth) and warm cache.
 
-  console.log("Creating short URL with slug: ", slugToUse, " for user: ", userId);
+  // Authenticated flow: persist to PostgreSQL (source of truth) and warm cache.
   const createdUrl = await createUrl({
     slug: slugToUse as string,
     url: input.url,
     userId: userId as string,
   });
-  console.log("Url added to Database!")
 
   try {
     // Populate cache with default TTL for faster redirects.
     await setCachedOriginalUrlBySlug(createdUrl.slug, createdUrl.url);
-
   } catch (error) {
     console.error("Redis cache write failed for slug redirect", error);
   }
@@ -140,6 +199,7 @@ export const createShortUrlService = async (
     slug: createdUrl.slug,
     originalUrl: createdUrl.url,
     shortUrl: buildShortUrl(origin, createdUrl.slug),
+    message: "Short URL created successfully",
   };
 };
 
@@ -159,8 +219,11 @@ export const getUserShortUrlsService = async (
 };
 
 export const deleteUserShortUrlService = async (id: string, userId: string) => {
+  const slug = await findSlugById(id);
+  console.log("Slug to delete: ", slug?.slug);
   const deleted = await deleteUrlByIdAndUserId(id, userId);
-
+  await setCachedOriginalUrlBySlug(slug?.slug || "", "", 1);
+  console.log("Delete Url In cache ", deleted.count);
   if (deleted.count === 0) {
     throw new UrlServiceError("Short URL not found", 404, ["URL_NOT_FOUND"]);
   }

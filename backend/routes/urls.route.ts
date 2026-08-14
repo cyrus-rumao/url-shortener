@@ -1,5 +1,5 @@
 import express from "express";
-import { authenticate } from "@/middlewares/auth.middleare.js";
+import { authenticate, optionalAuthenticate } from "@/middlewares/auth.middleare.js";
 import {
   createShortUrl,
   deleteShortUrl,
@@ -9,9 +9,9 @@ import {
 
 const router = express.Router();
 // console.log("Router hit")
-router.post("/", authenticate, createShortUrl);
+router.post("/", optionalAuthenticate, createShortUrl);
 router.get("/mine", authenticate, getMyShortUrls);
 router.delete("/:id", authenticate, deleteShortUrl);
 router.get("/:slug", redirectShortUrl);
-
+// router.get("/id", getUrl)
 export default router;

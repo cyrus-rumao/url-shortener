@@ -21,10 +21,13 @@ const Home = () => {
         slug: slug.trim() ? slug : undefined,
       });
       navigate("/shortened", { state: { result: createdShortUrl } });
+      
     } catch (serviceError) {
       console.log("Error creating short URL:", serviceError);
       setError(
-        serviceError instanceof Error ? serviceError.message : "Failed to shorten URL",
+        serviceError instanceof Error
+          ? serviceError.message
+          : "Failed to shorten URL",
       );
     } finally {
       setSubmitting(false);
