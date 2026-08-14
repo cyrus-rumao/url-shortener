@@ -52,10 +52,7 @@ export const createShortUrlService = async (
 ): Promise<ShortUrlResponse> => {
   let slugToUse: string | null = input.slug ? normalizeSlug(input.slug) : null;
   const isAuthenticated = Boolean(userId);
-
   if (slugToUse) {
-    // Check both DB and Redis cache for collisions.
-    
     const existingSlug = await findUrlBySlug(slugToUse);
 
     try {
@@ -103,6 +100,7 @@ export const createShortUrlService = async (
 
   // If unauthenticated: persist only to Redis with 24h TTL and do NOT write to DB.
   if (!isAuthenticated) {
+    console.log("reading unauthenticated!")
     try {
       // 24 hours in seconds
       const TWENTY_FOUR_HOURS = 24 * 60 * 60;
@@ -119,17 +117,20 @@ export const createShortUrlService = async (
       shortUrl: buildShortUrl(origin, slugToUse as string),
     };
   }
-
   // Authenticated flow: persist to PostgreSQL (source of truth) and warm cache.
+
+  console.log("Creating short URL with slug: ", slugToUse, " for user: ", userId);
   const createdUrl = await createUrl({
     slug: slugToUse as string,
     url: input.url,
     userId: userId as string,
   });
+  console.log("Url added to Database!")
 
   try {
     // Populate cache with default TTL for faster redirects.
     await setCachedOriginalUrlBySlug(createdUrl.slug, createdUrl.url);
+
   } catch (error) {
     console.error("Redis cache write failed for slug redirect", error);
   }
@@ -169,7 +170,7 @@ export const resolveOriginalUrlBySlugService = async (
   slug: string,
 ): Promise<string> => {
   const normalizedSlug = normalizeSlug(slug);
-console.log("Normalized slug: ", normalizedSlug);
+  console.log("Normalized slug: ", normalizedSlug);
   try {
     // Cache-aside read path for high-throughput redirects:
     // Redis hit returns immediately without touching PostgreSQL.
