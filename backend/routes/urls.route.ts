@@ -9,9 +9,9 @@ import {
 
 const router = express.Router();
 // console.log("Router hit")
-router.post("/", createShortUrl);
+router.post("/", authenticate, createShortUrl);
 router.get("/mine", authenticate, getMyShortUrls);
 router.delete("/:id", authenticate, deleteShortUrl);
-router.get("/:slug",    redirectShortUrl);
+router.get("/:slug", redirectShortUrl);
 
 export default router;
