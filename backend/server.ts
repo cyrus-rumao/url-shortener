@@ -6,10 +6,12 @@ import urlRoutes from "@/routes/urls.route.js";
 import { redirectShortUrl } from "@/controllers/urls.controller.js";
 const app = express();
 
-
 app.use(express.json());
 app.use(cookieParser());
-
+app.use((req, res, next) => {
+  console.log("REQUEST:", req.method, req.originalUrl);
+  next();
+});
 app.use("/api/auth", authRoutes);
 app.use("/api/urls", urlRoutes);
 app.get("/:slug", redirectShortUrl);

@@ -6,6 +6,13 @@ export const findUrlBySlug = async (slug: string) => {
   });
 };
 
+export const findSlugById = async (id: string) => {
+  return prisma.url.findUnique({
+    where: { id },
+    select: { slug: true },
+  });
+}
+
 export const createUrl = async (data: {
   slug: string;
   url: string;

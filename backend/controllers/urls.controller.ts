@@ -13,17 +13,17 @@ const getRequestOrigin = (req: Request) => `${req.protocol}://${req.get("host")}
 export const createShortUrl = async (req: Request, res: Response) => {
   try {
     console.log("Route hit");
-
     const input = createShortUrlSchema.parse(req.body);
     const createdUrl = await createShortUrlService(
       input,
       req.user ? req.user.id : null,
       getRequestOrigin(req),
     );
-    console.log("Created URL: ",createdUrl);
+    console.log("Created URL: ", createdUrl);
+    const message = createdUrl.message || (createdUrl.alreadyExisted ? "Short URL already exists" : "Short URL created successfully");
     return res.status(201).json({
       success: true,
-      message: "Short URL created successfully",
+      message,
       data: createdUrl,
     });
   } catch (error) {
@@ -93,7 +93,6 @@ export const redirectShortUrl = async (req: Request, res: Response) => {
 export const getMyShortUrls = async (req: Request, res: Response) => {
   try {
     const urls = await getUserShortUrlsService(req.user.id, getRequestOrigin(req));
-
     return res.status(200).json({
       success: true,
       message: "Short URLs fetched successfully",
@@ -128,6 +127,8 @@ export const deleteShortUrl = async (req: Request, res: Response) => {
   try {
     const urlId = req.params.id;
 
+    // console.log("Delete URL request received for ID: ", urlId);
+
     if (typeof urlId !== "string" || !urlId.trim()) {
       return res.status(400).json({
         success: false,
@@ -135,7 +136,9 @@ export const deleteShortUrl = async (req: Request, res: Response) => {
         errors: ["INVALID_URL_ID"],
       });
     }
+    console.log("Deleting UserId: ", req.user.id, " for URL ID: ", urlId);
 
+    // console.log("User ID: ", req.user.id);
     await deleteUserShortUrlService(urlId, req.user.id);
 
     return res.status(200).json({

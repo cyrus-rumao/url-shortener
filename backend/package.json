@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon --watch . --ext ts --exec tsx server.ts",
+    "check-port": "node scripts/check-port.js",
+    "dev": "npm run check-port && nodemon.cmd --watch . --ext ts --exec tsx server.ts",
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node dist/server.js",
     "build": "prisma generate && tsc && tsc-alias"
