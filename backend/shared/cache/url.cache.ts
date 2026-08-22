@@ -7,12 +7,16 @@ interface CachedUrlRecord {
   originalUrl: string;
 }
 
-const getUrlCacheKey = (slug: string) => `${URL_CACHE_PREFIX}${slug}`;
+const getUrlCacheKey = (slug: string, userId: string | null) => {
+  return userId
+    ? `${URL_CACHE_PREFIX}${slug}:user:${userId}`
+    : `${URL_CACHE_PREFIX}${slug}:null`;
+};
 
-export const getCachedOriginalUrlBySlug = async (slug: string) => {
-  const key = getUrlCacheKey(slug);
+export const getCachedOriginalUrlBySlug = async (slug: string, userId: string | null) => {
+  const key = getUrlCacheKey(slug, userId);
   console.log("Key: ", key);
-  const cachedValue = await redis.get(getUrlCacheKey(slug));
+  const cachedValue = await redis.get(key);
   console.log("Cached Value: ", cachedValue);
   if (!cachedValue) {
     return null;
@@ -24,6 +28,7 @@ export const getCachedOriginalUrlBySlug = async (slug: string) => {
 
 // Allow callers to override TTL (seconds). Defaults to URL_CACHE_TTL_SECONDS.
 export const setCachedOriginalUrlBySlug = async (
+  userId: string | null,
   slug: string,
   originalUrl: string,
   ttlSeconds: number = URL_CACHE_TTL_SECONDS,
@@ -31,7 +36,7 @@ export const setCachedOriginalUrlBySlug = async (
   const payload: CachedUrlRecord = { originalUrl };
   // Use SETEX to set value with expiry in seconds.
   await redis.setex(
-    getUrlCacheKey(slug),
+    getUrlCacheKey(slug, userId),
     ttlSeconds,
     JSON.stringify(payload),
   );

@@ -1,9 +1,11 @@
-import type { Request, Response } from "express";
+import type { Request, Response, NextFunction } from "express";
+// import {zodError} from 'zod';
 import { signupSchema, loginSchema } from "@/validations/auth.schema.js";
 import { loginService, logoutService, signupService } from "@/services/auth.service.js";
 import { setAccessCookie, setRefreshCookie, clearAuthCookies } from "@/auth/cookies.js";
+import { AuthServiceError } from "@/types/error.js";
 export const signup = async (
-  req: Request, res: Response
+  req: Request, res: Response, next: NextFunction
 ) => {
   try {
     const signupBody = signupSchema.parse(req.body);
@@ -18,19 +20,12 @@ export const signup = async (
     });
   }
   catch (error) {
-    if (error instanceof Error) {
-      return res.status(400).json({
-        message: error.message,
-      });
-    }
-    return res.status(500).json({
-      message: "Failed to create user",
-    });
+    next(error);
   }
 };
 
 export const login = async (
-  req: Request, res: Response
+  req: Request, res: Response, next: NextFunction
 ) => {
   try {
     const loginBody = loginSchema.parse(req.body);
@@ -47,18 +42,12 @@ export const login = async (
       }
     });
   } catch (error) {
-    if (error instanceof Error) {
-      return res.status(400).json({
-        message: error.message,
-      });
-    }
-    return res.status(500).json({
-      message: "Login failed",
-    });
+    // console.log(object)
+    next(error);
   }
 };
 export const logout = async (
-  req: Request, res: Response
+  req: Request, res: Response, next: NextFunction
 ) => {
   try {
     const userId = req.user.id;
@@ -69,14 +58,7 @@ export const logout = async (
     });
   }
   catch (error) {
-    if (error instanceof Error) {
-      return res.status(400).json({
-        message: error.message,
-      });
-    }
-    return res.status(500).json({
-      message: "Logout failed",
-    });
+    next(error);
   }
 };
 

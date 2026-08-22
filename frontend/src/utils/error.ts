@@ -1,14 +1,17 @@
-import { AxiosError } from "axios";
+import axios from "axios";
 import type { ApiFailure } from "@/types/url";
-export const getErrorMessage = (error: unknown) => {
-  if (error instanceof AxiosError) {
-    const responseData = error.response?.data as Partial<ApiFailure> | undefined;
-    return responseData?.message ?? "Failed to shorten URL";
+
+export const getErrorMessage = (
+  error: unknown,
+  fallback = "Something went wrong",
+) => {
+  if (axios.isAxiosError<ApiFailure>(error)) {
+    return error.response?.data?.message ?? fallback;
   }
 
   if (error instanceof Error) {
     return error.message;
   }
 
-  return "Failed to shorten URL";
+  return fallback;
 };

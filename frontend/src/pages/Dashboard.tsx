@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { deleteShortUrl, getMyShortUrls } from "@/services/url.service.js";
 import { useAuth } from "@/hooks/use-auth.js";
 import type { UserShortUrl } from "@/types/url.js";
+import { showError, showSuccess } from "@/utils/toast";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -36,8 +37,9 @@ const Dashboard = () => {
           setUrls(data);
         }
       } catch (fetchError) {
+        showError(fetchError instanceof Error ? fetchError.message : "Failed to load URLs");
         if (!cancelled) {
-          setError(fetchError instanceof Error ? fetchError.message : "Failed to load URLs");
+          setError("");
         }
       } finally {
         if (!cancelled) {
@@ -60,8 +62,9 @@ const Dashboard = () => {
     try {
       await deleteShortUrl(id);
       setUrls((current) => current.filter((item) => item.id !== id));
+      showSuccess("URL deleted successfully");
     } catch (deleteError) {
-      setError(deleteError instanceof Error ? deleteError.message : "Failed to delete URL");
+      showError(deleteError instanceof Error ? deleteError.message : "Failed to delete URL");
     } finally {
       setDeletingId(null);
     }

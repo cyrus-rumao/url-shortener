@@ -16,20 +16,11 @@ import type {
   UserShortUrlItem,
 } from "@/types/url.js";
 import { env } from "@/config/env.js";
+import { UrlServiceError } from "@/types/error.js";
 const AUTO_SLUG_LENGTH = env.AUTO_SLUG_LENGTH;
 const AUTO_SLUG_MAX_RETRIES = env.AUTO_SLUG_MAX_RETRIES;
 
-export class UrlServiceError extends Error {
-  statusCode: number;
-  errors: string[];
 
-  constructor(message: string, statusCode = 400, errors: string[] = []) {
-    super(message);
-    this.name = "UrlServiceError";
-    this.statusCode = statusCode;
-    this.errors = errors;
-  }
-}
 
 const ALPHABET =
   "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -115,13 +106,83 @@ export const createShortUrlService = async (
   // At this point, input.url is not an existing short URL in our domain (or parsing failed).
   // Proceed to normal slug selection/generation logic.
   let slugToUse: string | null = input.slug ? normalizeSlug(input.slug) : null;
+  const isAuthenticated = Boolean(userId);
+
+  // Helper: normalize origin host for same-domain checks
+  let originHost: string;
+  try {
+    originHost = new URL(origin).host.toLowerCase();
+  } catch (err) {
+    originHost = origin.toLowerCase();
+  }
+
+  // If the user provided one of our own short URLs as the input (e.g. https://our.domain/abc or www.our/abc),
+  // detect that and return the existing short URL instead of creating a new one.
+  try {
+    let possible = input.url;
+    if (!/^https?:\/\//i.test(possible)) {
+      // allow inputs like "www.short/abc" by assuming https
+      possible = `https://${possible}`;
+    }
+
+    const parsed = new URL(possible);
+    if (parsed.host.toLowerCase() === originHost) {
+      const pathSegments = parsed.pathname.split("/").filter(Boolean);
+      const candidateSlug = pathSegments.length > 0 ? pathSegments[0] : null;
+      if (candidateSlug) {
+        // Check DB first (source of truth)
+        const existingUrl = await findUrlBySlug(candidateSlug);
+        if (existingUrl) {
+          return {
+            id: existingUrl.id,
+            slug: existingUrl.slug,
+            originalUrl: existingUrl.url,
+            shortUrl: buildShortUrl(origin, existingUrl.slug),
+            alreadyExisted: true,
+            message: "Input is already a short URL; returning the existing short URL.",
+          };
+        }
+
+        // For unauthenticated users, check Redis cache for transient short URLs
+        try {
+          const cached = await getCachedOriginalUrlBySlug(candidateSlug);
+          if (cached) {
+            return {
+              id: "",
+              slug: candidateSlug,
+              originalUrl: cached,
+              shortUrl: buildShortUrl(origin, candidateSlug),
+              alreadyExisted: true,
+              message: "Input is already a short URL (transient); returning the existing short URL.",
+            };
+          }
+        } catch (err) {
+          // Redis read failure should not block creating a new short URL; proceed.
+          console.error("Redis read failed while checking existing short url", err);
+        }
+      }
+    }
+  } catch (err) {
+    // If parsing fails, continue with normal creation flow.
+  }
+
+  // At this point, input.url is not an existing short URL in our domain (or parsing failed).
+  // Proceed to normal slug selection/generation logic.
+  let slugToUse: string | null = input.slug ? normalizeSlug(input.slug) : null;
 
   if (slugToUse) {
     const existingSlug = await findUrlBySlug(slugToUse);
-
+    let cached = null;
     try {
-      const cached = await getCachedOriginalUrlBySlug(slugToUse);
-      if (existingSlug || cached) {
+      cached = await getCachedOriginalUrlBySlug(slugToUse, null);
+
+    } catch (err) {
+      console.error(
+        "Redis read failed while checking custom slug",
+        err,
+      );
+    }
+      if (existingSlug) {
         throw new UrlServiceError("Custom slug is already in use", 409, [
           "SLUG_CONFLICT",
         ]);
@@ -132,7 +193,7 @@ export const createShortUrlService = async (
           "SLUG_CONFLICT",
         ]);
       }
-    }
+    
   } else {
     for (let attempt = 0; attempt < AUTO_SLUG_MAX_RETRIES; attempt += 1) {
       const generatedSlug = generateAutoSlug();
@@ -140,7 +201,7 @@ export const createShortUrlService = async (
 
       let cached = null;
       try {
-        cached = await getCachedOriginalUrlBySlug(generatedSlug);
+        cached = await getCachedOriginalUrlBySlug(generatedSlug, null);
       } catch (err) {
         console.error("Redis read failed during slug generation check", err);
       }
@@ -165,7 +226,7 @@ export const createShortUrlService = async (
     try {
       // 24 hours in seconds
       const TWENTY_FOUR_HOURS = 24 * 60 * 60;
-      await setCachedOriginalUrlBySlug(slugToUse as string, input.url, TWENTY_FOUR_HOURS);
+      await setCachedOriginalUrlBySlug(null, slugToUse as string, input.url, TWENTY_FOUR_HOURS);
     } catch (error) {
       console.error("Redis write failed for unauthenticated short URL", error);
       throw new UrlServiceError("Temporary URL creation failed", 503, ["REDIS_FAILURE"]);
@@ -237,7 +298,7 @@ export const resolveOriginalUrlBySlugService = async (
   try {
     // Cache-aside read path for high-throughput redirects:
     // Redis hit returns immediately without touching PostgreSQL.
-    const cachedUrl = await getCachedOriginalUrlBySlug(normalizedSlug);
+    const cachedUrl = await getCachedOriginalUrlBySlug(normalizedSlug, null);
     console.log("URL is cached. Here it is: ", cachedUrl);
     if (cachedUrl) {
       return cachedUrl;
@@ -258,7 +319,7 @@ export const resolveOriginalUrlBySlugService = async (
 
   try {
     // On cache miss we repopulate Redis from PostgreSQL source of truth.
-    await setCachedOriginalUrlBySlug(normalizedSlug, existingUrl.url);
+    await setCachedOriginalUrlBySlug(null, normalizedSlug, existingUrl.url);
   } catch (error) {
     console.error("Redis cache write failed for slug redirect", error);
   }

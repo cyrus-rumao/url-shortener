@@ -5,6 +5,7 @@ import Signup from "@/pages/Signup.tsx";
 import ShortenedResult from "@/pages/ShortenedResult.tsx";
 import Dashboard from "@/pages/Dashboard.tsx";
 import Layout from "@/layout.tsx";
+import NotFound from "@/pages/NotFound.tsx";
 const Routers = () => {
   return (
     <Routes>
@@ -14,6 +15,8 @@ const Routers = () => {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
+
+        <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>
   );
