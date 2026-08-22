@@ -8,10 +8,12 @@ import path from "path";
 import { errorMiddleware } from "@/middlewares/error.middleware.js";
 const app = express();
 
-
 app.use(express.json());
 app.use(cookieParser());
-
+app.use((req, res, next) => {
+  console.log("REQUEST:", req.method, req.originalUrl);
+  next();
+});
 app.use("/api/auth", authRoutes);
 app.use("/api/urls", urlRoutes);
 app.get("/:slug", redirectShortUrl);

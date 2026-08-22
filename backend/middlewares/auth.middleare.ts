@@ -12,10 +12,9 @@ export const authenticate = async (
         const accessToken = req.cookies.accessToken;
         if (!accessToken) {
             return res.status(401).json({
-                message: "Unauthenticated",
+                message: "Unauthorized: No access token provided",
             });
         }
-
         const decoded = jwt.verify(
             accessToken,
             env.JWT_ACCESS_SECRET
@@ -48,5 +47,41 @@ export const authenticate = async (
         }
 
         next(error);
+    }
+};
+
+export const optionalAuthenticate = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
+    try {
+        const accessToken = req.cookies.accessToken;
+        if (!accessToken) {
+            console.log("No access token!")
+            return next();
+        }
+
+        const decoded = jwt.verify(
+            accessToken,
+            env.JWT_ACCESS_SECRET
+        ) as { userId: string };
+        const user = await findById(decoded.userId);
+
+        if (user) {
+            console.log("User found!")
+            req.user = {
+                id: user.id,
+                name: user.name,
+                email: user.email,
+            };
+        }
+
+        next();
+    } catch (error) {
+        // If token is invalid/expired, treat request as anonymous.
+        // The endpoint itself is public.
+        console.log("Invalid or expired token!")
+        next();
     }
 };

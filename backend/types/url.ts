@@ -8,6 +8,9 @@ export interface ShortUrlResponse {
   slug: string;
   originalUrl: string;
   shortUrl: string;
+  // Optional metadata returned by the service to indicate pre-existing entries
+  alreadyExisted?: boolean;
+  message?: string;
 }
 
 export interface UserShortUrlItem {
