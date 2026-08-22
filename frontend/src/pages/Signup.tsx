@@ -1,6 +1,8 @@
 import { useEffect, useState, type SyntheticEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/use-auth.js";
+import { showError, showSuccess } from "@/utils/toast";
+import { getErrorMessage } from "@/utils/error";
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -25,8 +27,9 @@ const Signup = () => {
     try {
       await signup({ name, email, password });
       navigate("/login");
+      showSuccess("Signup successful");
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Signup failed");
+      showError(getErrorMessage(error, "Signup failed"));
     } finally {
       setSubmitting(false);
     }

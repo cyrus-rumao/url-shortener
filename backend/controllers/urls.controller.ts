@@ -1,16 +1,15 @@
-import type { Request, Response } from "express";
+import type { Request, Response ,NextFunction} from "express";
 import {
-  UrlServiceError,
   createShortUrlService,
   deleteUserShortUrlService,
   getUserShortUrlsService,
   resolveOriginalUrlBySlugService,
 } from "@/services/url.service.js";
 import { createShortUrlSchema } from "@/validations/url.schema.js";
-
+import { UrlServiceError } from "@/types/error.js";
 const getRequestOrigin = (req: Request) => `${req.protocol}://${req.get("host")}`;
 
-export const createShortUrl = async (req: Request, res: Response) => {
+export const createShortUrl = async (req: Request, res: Response, next: NextFunction) => {
   try {
     console.log("Route hit");
 
@@ -27,70 +26,30 @@ export const createShortUrl = async (req: Request, res: Response) => {
       data: createdUrl,
     });
   } catch (error) {
-    if (error instanceof UrlServiceError) {
-      return res.status(error.statusCode).json({
-        success: false,
-        message: error.message,
-        errors: error.errors,
-      });
-    }
-
-    if (error instanceof Error) {
-      return res.status(400).json({
-        success: false,
-        message: error.message,
-        errors: [],
-      });
-    }
-
-    return res.status(500).json({
-      success: false,
-      message: "Failed to create short URL",
-      errors: [],
-    });
+    return next(error);
   }
 };
 
-export const redirectShortUrl = async (req: Request, res: Response) => {
-  try {
-    const slugParam = req.params.slug;
-    console.log("Slug parameter: ", slugParam);
-    if (typeof slugParam !== "string" || !slugParam.trim()) {
-      return res.status(400).json({
-        success: false,
-        message: "Slug is required",
-        errors: ["INVALID_SLUG"],
-      });
+  export const redirectShortUrl = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const slugParam = req.params.slug;
+      console.log("Slug parameter: ", slugParam);
+      if (typeof slugParam !== "string" || !slugParam.trim()) {
+        return res.status(400).json({
+          success: false,
+          message: "Slug is required",
+          errors: ["INVALID_SLUG"],
+        });
+      }
+
+      const originalUrl = await resolveOriginalUrlBySlugService(slugParam);
+      return res.redirect(302, originalUrl);
+    } catch (error) {
+      return next(error);
     }
+  };
 
-    const originalUrl = await resolveOriginalUrlBySlugService(slugParam);
-    return res.redirect(302, originalUrl);
-  } catch (error) {
-    if (error instanceof UrlServiceError) {
-      return res.status(error.statusCode).json({
-        success: false,
-        message: error.message,
-        errors: error.errors,
-      });
-    }
-
-    if (error instanceof Error) {
-      return res.status(400).json({
-        success: false,
-        message: error.message,
-        errors: [],
-      });
-    }
-
-    return res.status(500).json({
-      success: false,
-      message: "Failed to resolve short URL",
-      errors: [],
-    });
-  }
-};
-
-export const getMyShortUrls = async (req: Request, res: Response) => {
+export const getMyShortUrls = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const urls = await getUserShortUrlsService(req.user.id, getRequestOrigin(req));
 
@@ -100,31 +59,11 @@ export const getMyShortUrls = async (req: Request, res: Response) => {
       data: urls,
     });
   } catch (error) {
-    if (error instanceof UrlServiceError) {
-      return res.status(error.statusCode).json({
-        success: false,
-        message: error.message,
-        errors: error.errors,
-      });
-    }
-
-    if (error instanceof Error) {
-      return res.status(400).json({
-        success: false,
-        message: error.message,
-        errors: [],
-      });
-    }
-
-    return res.status(500).json({
-      success: false,
-      message: "Failed to fetch short URLs",
-      errors: [],
-    });
+    return next(error);
   }
 };
 
-export const deleteShortUrl = async (req: Request, res: Response) => {
+export const deleteShortUrl = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const urlId = req.params.id;
 
@@ -144,26 +83,6 @@ export const deleteShortUrl = async (req: Request, res: Response) => {
       data: null,
     });
   } catch (error) {
-    if (error instanceof UrlServiceError) {
-      return res.status(error.statusCode).json({
-        success: false,
-        message: error.message,
-        errors: error.errors,
-      });
-    }
-
-    if (error instanceof Error) {
-      return res.status(400).json({
-        success: false,
-        message: error.message,
-        errors: [],
-      });
-    }
-
-    return res.status(500).json({
-      success: false,
-      message: "Failed to delete short URL",
-      errors: [],
-    });
+    return next(error);
   }
 };

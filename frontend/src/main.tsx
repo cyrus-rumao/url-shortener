@@ -4,8 +4,10 @@ import './index.css'
 import { BrowserRouter as Router } from "react-router-dom";
 import { AuthProvider } from './context/auth-provider';
 import Routers from './routes/app.route.tsx';
+import { Toaster } from 'sonner';
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
+    <Toaster richColors position="top-center" />
     <Router>
       <AuthProvider>
         <Routers />

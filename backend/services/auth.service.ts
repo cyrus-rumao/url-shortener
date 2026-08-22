@@ -3,6 +3,7 @@ import { createUser, findByEmail } from "@/repositories/user.repository.js";
 import type { LoginInput, SignupInput } from "@/validations/auth.schema.js";
 import { encryptPassword, verifyPassword } from "@/auth/password.js";
 import { clearRefreshToken, generateAccessToken, generateRefreshToken, storeRefreshToken } from "@/auth/jwt.js";
+import { AuthServiceError } from "@/types/error.js";
 export const signupService = async (signupBody: SignupInput) => {
     const existingUser = await findByEmail(signupBody.email);
     if (existingUser) {
@@ -15,10 +16,10 @@ export const signupService = async (signupBody: SignupInput) => {
 export const loginService = async (loginBody: LoginInput) => {
     const existingUser = await findByEmail(loginBody.email);
     if (!existingUser) {
-        throw new Error("User does not exist");
+        throw new AuthServiceError("User does not exist", 401, ["USER_NOT_FOUND"]);
     }
     if (!(await verifyPassword(existingUser.password, loginBody.password))) {
-        throw new Error("Invalid password");
+        throw new AuthServiceError("Invalid email or password", 400, ["INVALID_CREDENTIALS"]);
     }
     const accessToken = generateAccessToken(existingUser.id);
     const refreshToken = generateRefreshToken(existingUser.id);

@@ -2,6 +2,7 @@ import { useState, type SyntheticEvent } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { createShortUrl } from "@/services/url.service.js";
+import { showError, showSuccess } from "@/utils/toast";
 
 const Home = () => {
   const navigate = useNavigate();
@@ -21,16 +22,18 @@ const Home = () => {
         slug: slug.trim() ? slug : undefined,
       });
       navigate("/shortened", { state: { result: createdShortUrl } });
+      showSuccess("URL shortened successfully");
     } catch (serviceError) {
       console.log("Error creating short URL:", serviceError);
-      setError(
-        serviceError instanceof Error ? serviceError.message : "Failed to shorten URL",
+      showError(
+        serviceError instanceof Error
+          ? serviceError.message
+          : "Failed to shorten URL",
       );
     } finally {
       setSubmitting(false);
     }
   };
-
   return (
     <div className="bg-grey-400">
       <section className="mx-auto w-full max-w-2xl px-4 py-14 lg:items-center lg:py-20">
