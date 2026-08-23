@@ -56,7 +56,8 @@ jobs:
 
           ssh -i ~/.ssh/deploy_key "$EC2_USER@$EC2_HOST" "
             cd ~/url-shortener &&
-            IMAGE_TAG=$IMAGE_TAG docker compose pull &&
-            IMAGE_TAG=$IMAGE_TAG docker compose up -d &&
+            export IMAGE_TAG=$IMAGE_TAG &&
+            docker compose pull &&
+            docker compose up -d --force-recreate &&
             docker image prune -f
           "
