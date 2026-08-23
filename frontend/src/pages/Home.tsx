@@ -1,8 +1,9 @@
 import { useState, type SyntheticEvent } from "react";
 import { useNavigate } from "react-router-dom";
-
+import { ArrowRight, Link2, Lock } from "lucide-react";
 import { createShortUrl } from "@/services/url.service.js";
 import { showError, showSuccess } from "@/utils/toast";
+import PageTitle from "@/services/PageTitle";
 
 const Home = () => {
   const navigate = useNavigate();
@@ -35,60 +36,100 @@ const Home = () => {
     }
   };
   return (
-    <div className="bg-grey-400">
-      <section className="mx-auto w-full max-w-2xl px-4 py-14 lg:items-center lg:py-20">
-        <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-[0_24px_80px_-30px_rgba(37,99,235,0.35)]">
-          <div className="mb-6">
-            <p className="text-sm font-medium uppercase tracking-[0.2em] text-blue-600">
-              Create link
-            </p>
-            <h2 className="mt-2 text-2xl font-semibold text-slate-900">
-              Shorten a URL
-            </h2>
+    <div className="relative w-full">
+      <PageTitle title="Home" />
+
+      <main className="relative z-10 flex w-full flex-col items-center px-4">
+        {/* Shorten form */}
+        <section className="relative mt-8 w-full max-w-xl">
+          {/* Purple glow */}
+          <div
+            className="pointer-events-none absolute -inset-5 rounded-[1.5rem] bg-purple-950/10 blur-3xl"
+            aria-hidden="true"
+          />
+
+          <div className="relative rounded-2xl border border-white/[0.10] bg-black/80 p-4 shadow-[0_25px_80px_-35px_rgba(139,92,246,0.35)] backdrop-blur-xl sm:p-6">
+            <form className="grid gap-3" onSubmit={handleSubmit}>
+              {/* Long URL */}
+              <label className="relative block">
+                <span className="sr-only">Long URL</span>
+
+                <Link2
+                  className="pointer-events-none absolute left-4 top-1/2 h-4.5 w-4.5 -translate-y-1/2 text-zinc-500"
+                  strokeWidth={1.8}
+                />
+
+                <input
+                  className="h-14 w-full rounded-xl border border-white/[0.10] bg-white/[0.035] pl-12 pr-4 text-sm text-white outline-none transition placeholder:text-zinc-500 hover:border-white/[0.15] focus:border-purple-500/40 focus:bg-white/[0.05] focus:ring-4 focus:ring-purple-500/10"
+                  placeholder="https://your-long-url.com..."
+                  value={url}
+                  onChange={(event) => setUrl(event.target.value)}
+                  required
+                />
+              </label>
+
+              {/* Custom slug */}
+              <label className="block">
+                <span className="sr-only">Custom slug</span>
+
+                <input
+                  className="h-14 w-full rounded-xl border border-white/[0.10] bg-white/[0.035] px-4 text-sm text-white outline-none transition placeholder:text-zinc-500 hover:border-white/[0.15] focus:border-purple-500/40 focus:bg-white/[0.05] focus:ring-4 focus:ring-purple-500/10"
+                  placeholder="Custom slug (optional)"
+                  value={slug}
+                  onChange={(event) => setSlug(event.target.value)}
+                />
+              </label>
+
+              {/* Secure link */}
+              <div className="mt-1 flex min-h-[68px] items-center justify-between rounded-xl border border-white/[0.08] bg-white/[0.02] px-4">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/[0.08] bg-white/[0.035]">
+                    <Lock className="h-4 w-4 text-zinc-400" strokeWidth={1.8} />
+                  </div>
+
+                  <div>
+                    <p className="text-sm font-semibold text-zinc-100">
+                      Secure Link
+                    </p>
+
+                    <p className="mt-0.5 text-[11px] text-zinc-500">
+                      Require a password to access
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  aria-label="Toggle secure link"
+                  className="relative h-6 w-11 rounded-full border border-white/10 bg-black transition-colors"
+                >
+                  <span className="absolute left-1 top-1 h-4 w-4 rounded-full bg-zinc-400 transition-transform" />
+                </button>
+              </div>
+
+              {/* Submit */}
+              <button
+                type="submit"
+                disabled={submitting}
+                className="mt-1 flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-white px-5 text-sm font-semibold text-black transition hover:bg-zinc-200 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <span>{submitting ? "Shortening..." : "Shorten URL"}</span>
+
+                {!submitting && (
+                  <ArrowRight className="h-4 w-4" strokeWidth={2} />
+                )}
+              </button>
+            </form>
+
+            {/* Error */}
+            {error ? (
+              <div className="mt-3 rounded-xl border border-red-500/20 bg-red-500/[0.06] px-3 py-2.5 text-xs text-red-400">
+                {error}
+              </div>
+            ) : null}
           </div>
-
-          <form className="grid gap-4" onSubmit={handleSubmit}>
-            <label className="grid gap-2">
-              <span className="text-sm font-medium text-slate-700">
-                Long URL
-              </span>
-              <input
-                className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100"
-                placeholder="https://example.com/very/long/link"
-                value={url}
-                onChange={(event) => setUrl(event.target.value)}
-                required
-              />
-            </label>
-
-            <label className="grid gap-2">
-              <span className="text-sm font-medium text-slate-700">
-                Custom slug
-              </span>
-              <input
-                className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100"
-                placeholder="my-link"
-                value={slug}
-                onChange={(event) => setSlug(event.target.value)}
-              />
-            </label>
-
-            <button
-              type="submit"
-              disabled={submitting}
-              className="rounded-2xl bg-blue-600 px-4 py-3 font-semibold text-white transition hover:bg-blue-700"
-            >
-              {submitting ? "Shortening..." : "Shorten URL"}
-            </button>
-          </form>
-
-          {error ? (
-            <div className="mt-5 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-              {error}
-            </div>
-          ) : null}
-        </div>
-      </section>
+        </section>
+      </main>
     </div>
   );
 };

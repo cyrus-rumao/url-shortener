@@ -2,8 +2,9 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react
 import { api } from "@/services/axios.js";
 import { AuthContext } from "./auth-context.js";
 import type { LoginPayload, SignupPayload, User } from "@/types/auth.js";
-
+// import { useNavigate } from "react-router-dom";
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  // const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -45,6 +46,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const logout = useCallback(async () => {
     await api.post("/auth/logout");
+    // navigate("/", { replace: true });
     setUser(null);
   }, []);
 
