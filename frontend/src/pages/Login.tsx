@@ -3,6 +3,9 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/use-auth.js";
 import { getErrorMessage } from "@/utils/error";
 import { showSuccess, showError } from "@/utils/toast";
+import { AnimatePresence, motion } from "framer-motion";
+import { X } from "lucide-react";
+import PageTitle from "@/services/PageTitle";
 const Login = () => {
   const navigate = useNavigate();
   const { user, loading, login } = useAuth();
@@ -16,7 +19,11 @@ const Login = () => {
       navigate("/");
     }
   }, [loading, navigate, user]);
+  // const [isClosing, setIsClosing] = useState(false);
 
+  // const handleClose = () => {
+  //   setIsClosing(true);
+  // };
   const handleSubmit = async (event: SyntheticEvent<HTMLFormElement>) => {
     event.preventDefault();
     setSubmitting(true);
@@ -34,77 +41,165 @@ const Login = () => {
   };
 
   return (
-    <section className="mx-auto grid w-full max-w-6xl gap-10 px-4 py-14 lg:grid-cols-[0.95fr_1.05fr] lg:items-center lg:py-20">
-      <div className="space-y-5">
-        <span className="inline-flex rounded-full border border-blue-200 bg-blue-50 px-4 py-1 text-sm font-medium text-blue-700">
-          Welcome back
-        </span>
-        <h1 className="text-4xl font-semibold tracking-tight text-slate-900 md:text-5xl">
-          Log in to manage your links.
-        </h1>
-        <p className="max-w-xl text-lg leading-8 text-slate-600">
-          Access your short URLs, create new ones, and keep your account in one
-          place.
-        </p>
-      </div>
+    <motion.div
+      className="fixed inset-0 z-40 flex items-center justify-center bg-black/45 px-4 backdrop-blur-[3px]"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.2, ease: "easeOut" }}
+    >
+      <PageTitle title="Login" />
+      <motion.section
+        className="relative w-full max-w-md"
+        initial={{
+          opacity: 0,
+          y: 18,
+          scale: 0.96,
+        }}
+        animate={{
+          opacity: 1,
+          y: 0,
+          scale: 1,
+        }}
+        exit={{
+          opacity: 0,
+          y: 10,
+          scale: 0.97,
+        }}
+        transition={{
+          duration: 0.28,
+          ease: [0.16, 1, 0.3, 1],
+        }}
+      >
+        {/* Modal glow */}
+        <div
+          className="pointer-events-none absolute -inset-6 rounded-[2rem] bg-purple-950/15 blur-3xl"
+          aria-hidden="true"
+        />
 
-      <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-[0_24px_80px_-30px_rgba(37,99,235,0.35)]">
-        <h2 className="text-2xl font-semibold text-slate-900">Login</h2>
-        <p className="mt-1 text-sm text-slate-500">
-          Use your registered email and password.
-        </p>
-
-        <form className="mt-6 grid gap-4" onSubmit={handleSubmit}>
-          <label className="grid gap-2">
-            <span className="text-sm font-medium text-slate-700">Email</span>
-            <input
-              className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100"
-              type="email"
-              placeholder="you@example.com"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              required
-            />
-          </label>
-
-          <label className="grid gap-2">
-            <span className="text-sm font-medium text-slate-700">Password</span>
-            <input
-              className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100"
-              type="password"
-              placeholder="••••••••"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              required
-            />
-          </label>
-
-          <button
-            type="submit"
-            disabled={submitting}
-            className="rounded-2xl bg-blue-600 px-4 py-3 font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-70"
+        <div className="relative rounded-2xl border border-white/[0.12] bg-black/70 p-6 shadow-[0_30px_100px_-35px_rgba(139,92,246,0.45)] backdrop-blur-2xl sm:p-7">
+          {/* Close */}
+          <motion.button
+            type="button"
+            onClick={() => navigate("/")}
+            aria-label="Close login"
+            whileHover={{
+              scale: 1.5,
+              backgroundColor: "rgba(255,255,255,0.06)",
+            }}
+            whileTap={{ scale: 0.9 }}
+            transition={{ duration: 0.15 }}
+            className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-lg text-zinc-500"
           >
-            {submitting ? "Logging in..." : "Login"}
-          </button>
-        </form>
+            <X className="h-4 w-4" strokeWidth={1.8} />
+          </motion.button>
 
-        {error ? (
-          <div className="mt-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-            {error}
+          {/* Header */}
+          <div>
+            <h2 className="text-3xl font-semibold tracking-[-0.025em] text-white">
+              Welcome back
+            </h2>
+
+            <p className="mt-2 text-sm text-zinc-500">
+              Log in to manage your links.
+            </p>
           </div>
-        ) : null}
 
-        <p className="mt-5 text-sm text-slate-500">
-          Need an account?{" "}
-          <Link
-            className="font-medium text-blue-600 hover:text-blue-700"
-            to="/signup"
-          >
-            Signup
-          </Link>
-        </p>
-      </div>
-    </section>
+          {/* Form */}
+          <form className="mt-6 grid gap-4" onSubmit={handleSubmit}>
+            <label className="grid gap-2">
+              <span className="text-sm font-medium text-zinc-400">Email</span>
+
+              <input
+                className="h-13 rounded-xl border border-white/[0.10] bg-white/[0.035] px-4 text-sm text-white outline-none transition placeholder:text-zinc-600 hover:border-white/[0.15] focus:border-purple-500/40 focus:bg-white/[0.05] focus:ring-4 focus:ring-purple-500/10"
+                type="email"
+                placeholder="you@example.com"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                required
+              />
+            </label>
+
+            <label className="grid gap-2">
+              <span className="text-sm font-medium text-zinc-400">
+                Password
+              </span>
+
+              <input
+                className="h-13 rounded-xl border border-white/[0.10] bg-white/[0.035] px-4 text-sm text-white outline-none transition placeholder:text-zinc-600 hover:border-white/[0.15] focus:border-purple-500/40 focus:bg-white/[0.05] focus:ring-4 focus:ring-purple-500/10"
+                type="password"
+                placeholder="••••••••"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                required
+              />
+            </label>
+
+            {/* Submit */}
+            <motion.button
+              type="submit"
+              disabled={submitting}
+              whileHover={!submitting ? { scale: 1.01 } : undefined}
+              whileTap={!submitting ? { scale: 0.985 } : undefined}
+              transition={{ duration: 0.15 }}
+              className="mt-1 flex h-13 w-full items-center justify-center rounded-xl bg-white px-4 text-sm font-semibold text-black disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <AnimatePresence mode="wait" initial={false}>
+                {submitting ? (
+                  <motion.span
+                    key="loading"
+                    className="flex items-center gap-2"
+                    initial={{ opacity: 0, y: 4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -4 }}
+                    transition={{ duration: 0.15 }}
+                  >
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-black/20 border-t-black" />
+                    Logging in...
+                  </motion.span>
+                ) : (
+                  <motion.span
+                    key="login"
+                    initial={{ opacity: 0, y: 4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -4 }}
+                    transition={{ duration: 0.15 }}
+                  >
+                    Login
+                  </motion.span>
+                )}
+              </AnimatePresence>
+            </motion.button>
+          </form>
+
+          {/* Error */}
+          <AnimatePresence initial={false}>
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, height: 0, y: -5 }}
+                animate={{ opacity: 1, height: "auto", y: 0 }}
+                exit={{ opacity: 0, height: 0, y: -5 }}
+                transition={{ duration: 0.2 }}
+                className="mt-4 overflow-hidden rounded-xl border border-red-500/20 bg-red-500/[0.06] px-4 py-3 text-sm text-red-400"
+              >
+                {error}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Signup */}
+          <p className="mt-6 text-center text-sm text-zinc-600">
+            Need an account?{" "}
+            <Link
+              className="font-medium text-zinc-300 transition-colors hover:text-white"
+              to="/signup"
+            >
+              Sign Up
+            </Link>
+          </p>
+        </div>
+      </motion.section>
+    </motion.div>
   );
 };
 

@@ -17,6 +17,7 @@ const Routers = () => {
         <Route path="/signup" element={<Signup />} />
 
         <Route path="*" element={<NotFound />} />
+        <Route path="/404" element={<NotFound />} />
       </Route>
     </Routes>
   );
