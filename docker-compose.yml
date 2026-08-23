@@ -1,6 +1,6 @@
 services:
   backend:
-    image: cyrumao117/url-backend:latest
+    image: cyrumao117/url-backend:${IMAGE_TAG:-latest}
     container_name: url-backend-container
     restart: unless-stopped
     env_file:
@@ -11,7 +11,7 @@ services:
       - "2000"
 
   frontend:
-    image: cyrumao117/url-frontend:latest
+    image: cyrumao117/url-frontend:${IMAGE_TAG:-latest}
     container_name: url-frontend-container
     restart: unless-stopped
   nginx:
