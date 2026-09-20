@@ -21,9 +21,9 @@ COPY package*.json ./
 RUN npm ci --omit=dev
 # Copy built files and node_modules from build stage
 COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/generated ./generated
-COPY --from=builder /app/prisma ./src/prisma
-COPY --from=builder /app/prisma.config.ts ./
+COPY --from=builder /app/src/generated ./src/generated
+COPY --from=builder /app/src/prisma ./src/prisma
+COPY --from=builder /app/src/config/prisma.config.ts ./src/config/prisma.config.ts
 
 # Expose the application port (adjust if your app listens on a different port)
 EXPOSE 2000
