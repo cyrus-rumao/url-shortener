@@ -1,6 +1,7 @@
 import { useState, type SyntheticEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, Link2, Lock } from "lucide-react";
+import { ArrowRight, Link2 } from "lucide-react";
+// import { Lock } from "lucide-react";
 import { createShortUrl } from "@/services/url.service.js";
 import { showError, showSuccess } from "@/utils/toast";
 import PageTitle from "@/services/PageTitle";
@@ -81,7 +82,7 @@ const Home = () => {
               </label>
 
               {/* Secure link */}
-              <div className="mt-1 flex min-h-[68px] items-center justify-between rounded-xl border border-white/[0.08] bg-white/[0.02] px-4">
+              {/* <div className="mt-1 flex min-h-[68px] items-center justify-between rounded-xl border border-white/[0.08] bg-white/[0.02] px-4">
                 <div className="flex items-center gap-3">
                   <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/[0.08] bg-white/[0.035]">
                     <Lock className="h-4 w-4 text-zinc-400" strokeWidth={1.8} />
@@ -105,7 +106,7 @@ const Home = () => {
                 >
                   <span className="absolute left-1 top-1 h-4 w-4 rounded-full bg-zinc-400 transition-transform" />
                 </button>
-              </div>
+              </div> */}
 
               {/* Submit */}
               <button

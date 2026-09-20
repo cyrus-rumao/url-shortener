@@ -1,11 +1,11 @@
 import express from "express";
 import cookieParser from "cookie-parser";
-import { env } from "@/config/env.js";
-import authRoutes from "@/routes/auth.route.js";
-import urlRoutes from "@/routes/urls.route.js";
-import { redirectShortUrl } from "@/controllers/urls.controller.js";
+import { env } from "@/src/config/env.js";
+import authRoutes from "@/src/routes/auth.route.js";
+import urlRoutes from "@/src/routes/urls.route.js";
+import { redirectShortUrl } from "@/src/controllers/urls.controller.js";
 import path from "path";
-import { errorMiddleware } from "@/middlewares/error.middleware.js";
+import { errorMiddleware } from "@/src/middlewares/error.middleware.js";
 const app = express();
 
 app.use(express.json());
