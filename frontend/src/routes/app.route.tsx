@@ -6,6 +6,8 @@ import ShortenedResult from "@/pages/ShortenedResult.tsx";
 import Dashboard from "@/pages/Dashboard.tsx";
 import Layout from "@/layout.tsx";
 import NotFound from "@/pages/NotFound.tsx";
+// import OtpVerify from "@/pages/otpVerify";
+// import OtpVerify from "@/pages/otpVerify";
 const Routers = () => {
   return (
     <Routes>
@@ -15,7 +17,7 @@ const Routers = () => {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
-
+        {/* <Route path="/otp-verify" element={<OtpVerify />} /> */}
         <Route path="*" element={<NotFound />} />
         <Route path="/404" element={<NotFound />} />
       </Route>

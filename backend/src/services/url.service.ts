@@ -44,7 +44,6 @@ export const createShortUrlService = async (
   origin: string,
 ): Promise<ShortUrlResponse> => {
   const isAuthenticated = Boolean(userId);
-
   // Helper: normalize origin host for same-domain checks
   let originHost: string;
   try {
@@ -68,6 +67,7 @@ export const createShortUrlService = async (
       if (candidateSlug) {
         // Check DB first (source of truth)
         const existingUrl = await findUrlBySlug(candidateSlug);
+        console.log(existingUrl);
         if (existingUrl) {
           return {
             id: existingUrl.id,
@@ -110,19 +110,10 @@ export const createShortUrlService = async (
 
   if (slugToUse) {
     const existingSlug = await findUrlBySlug(slugToUse);
-    let cached = null;
-    try {
-      const cached = await getCachedOriginalUrlBySlug(slugToUse, null);
-
-    } catch (err) {
-
-      console.error(
-        "Redis read failed while checking custom slug",
-        err,
-      );
-
-    }
-    if (existingSlug) {
+    console.log("Existing: ", existingSlug);
+    const cached = await getCachedOriginalUrlBySlug(slugToUse, null);
+    console.log("Cached: ", cached);
+    if (existingSlug || cached) {
       throw new UrlServiceError("Custom slug is already in use", 409, [
         "SLUG_CONFLICT",
       ]);
