@@ -23,6 +23,7 @@ const envSchema = z.object({
   REFRESH_TOKEN_EXPIRY: z.string().default("7d"),
   AUTO_SLUG_LENGTH: z.coerce.number().default(8),
   AUTO_SLUG_MAX_RETRIES: z.coerce.number().default(5),
+  BASE_URL: z.string().url("Please provide a valid BASE_URL"),
 });
 
 const parsed = envSchema.safeParse(process.env);

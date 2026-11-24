@@ -27,6 +27,6 @@ export const loginService = async (loginBody: LoginInput) => {
     await storeRefreshToken(existingUser.id, refreshToken);
     return { user: existingUser, accessToken, refreshToken };
 }
-export const logoutService = async  (userId: string) => {
+export const logoutService = async (userId: string) => {
     await clearRefreshToken(userId);
 }

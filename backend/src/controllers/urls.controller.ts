@@ -1,4 +1,4 @@
-import type { Request, Response ,NextFunction} from "express";
+import type { Request, Response, NextFunction } from "express";
 import {
   createShortUrlService,
   deleteUserShortUrlService,
@@ -7,16 +7,19 @@ import {
 } from "@/src/services/url.service.js";
 import { createShortUrlSchema } from "@/src/validations/url.schema.js";
 import { UrlServiceError } from "@/src/types/error.js";
-const getRequestOrigin = (req: Request) => `${req.protocol}://${req.get("host")}`;
+import { env } from "../config/env.js";
+// import { env } from "../config/env.js";
+const getRequestOrigin = env.BASE_URL;
 
 export const createShortUrl = async (req: Request, res: Response, next: NextFunction) => {
   try {
     console.log("Route hit");
     const input = createShortUrlSchema.parse(req.body);
+    console.log("Input validated: ", input);
     const createdUrl = await createShortUrlService(
       input,
       req.user ? req.user.id : null,
-      getRequestOrigin(req),
+      getRequestOrigin,
     );
     console.log("Created URL: ", createdUrl);
     const message = createdUrl.message || (createdUrl.alreadyExisted ? "Short URL already exists" : "Short URL created successfully");
@@ -30,28 +33,28 @@ export const createShortUrl = async (req: Request, res: Response, next: NextFunc
   }
 };
 
-  export const redirectShortUrl = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const slugParam = req.params.slug;
-      console.log("Slug parameter: ", slugParam);
-      if (typeof slugParam !== "string" || !slugParam.trim()) {
-        return res.status(400).json({
-          success: false,
-          message: "Slug is required",
-          errors: ["INVALID_SLUG"],
-        });
-      }
-
-      const originalUrl = await resolveOriginalUrlBySlugService(slugParam);
-      return res.redirect(302, originalUrl);
-    } catch (error) {
-      return next(error);
+export const redirectShortUrl = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const slugParam = req.params.slug;
+    console.log("Slug parameter: ", slugParam);
+    if (typeof slugParam !== "string" || !slugParam.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: "Slug is required",
+        errors: ["INVALID_SLUG"],
+      });
     }
-  };
+
+    const originalUrl = await resolveOriginalUrlBySlugService(slugParam);
+    return res.redirect(302, originalUrl);
+  } catch (error) {
+    return next(error);
+  }
+};
 
 export const getMyShortUrls = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const urls = await getUserShortUrlsService(req.user.id, getRequestOrigin(req));
+    const urls = await getUserShortUrlsService(req.user.id, getRequestOrigin);
     return res.status(200).json({
       success: true,
       message: "Short URLs fetched successfully",

@@ -7,7 +7,13 @@ import tailwindcss from "@tailwindcss/vite";
 export default defineConfig({
   server: {
     proxy: {
-      "/api": "http://localhost:2000",
+      "/api": {
+        "target": "http://backend:2000",
+        "changeOrigin": true,
+        "secure": false
+      },
+
+
     },
   },
   plugins: [
